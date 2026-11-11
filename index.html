@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="Game edukasi interaktif tentang siklus hidrologi dan lapisan atmosfer untuk siswa SMA. Jelajahi perjalanan tetes air dari evaporasi hingga presipitasi.">
+    <meta name="author" content="Autonomous Product Studio">
+    <meta name="theme-color" content="#4A90E2">
+    <meta name="color-scheme" content="light dark">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Petualangan Tetes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Petualangan Tetes: Siklus Hidrologi">
+    <meta property="og:description" content="Jelajahi lapisan atmosfer melalui perjalanan interaktif siklus air. Edukatif, menyenangkan, dan siap dimainkan di perangkat apa pun.">
+    <meta property="og:locale" content="id_ID">
+    <meta property="og:site_name" content="Petualangan Tetes">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Petualangan Tetes: Siklus Hidrologi">
+    <meta name="twitter:description" content="Game edukasi interaktif tentang siklus hidrologi dan lapisan atmosfer.">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 15 Q30 45 30 65 A20 20 0 1 0 70 65 Q70 45 50 15 Z' fill='%234A90E2'/%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 15 Q30 45 30 65 A20 20 0 1 0 70 65 Q70 45 50 15 Z' fill='%234A90E2'/%3E%3C/svg%3E">
+    <title>Petualangan Tetes: Siklus Hidrologi</title>
+    <style>
+        :root {
+            --color-bg: oklch(0.96 0.01 220);
+            --color-primary: oklch(0.75 0.12 220);
+            --color-primary-dark: oklch(0.55 0.15 220);
+            --color-accent: oklch(0.70 0.15 80);
+            --color-text: oklch(0.25 0.05 220);
+            --color-text-light: oklch(0.60 0.05 220);
+            --color-surface: oklch(1.0 0 0);
+            --color-error: oklch(0.65 0.20 25);
+            --color-success: oklch(0.70 0.15 145);
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-5: 24px;
+            --space-6: 32px;
+            --space-7: 48px;
+            --radius-sm: 8px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --font-display: 'Georgia', 'Times New Roman', serif;
+            --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+            font-size: 16px;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.5;
+            overflow: hidden;
+            width: 100%;
+            height: 100dvh;
+            height: 100vh; /* Fallback */
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            -webkit-touch-callout: none;
+            overscroll-behavior: none;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
+
+        /* Grain Overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.4;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        /* UI Overlays */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-5);
+            z-index: 100;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        h1, h2, h3 {
+            font-family: var(--font-display);
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+        }
+
+        h1 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            color: var(--color-primary-dark);
+            text-align: center;
+            margin-bottom: var(--space-4);
+        }
+
+        h2 {
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            margin-bottom: var(--space-3);
+        }
+
+        p {
+            font-size: 1rem;
+            color: var(--color-text-light);
+            text-align: center;
+            max-width: 400px;
+            margin-bottom: var(--space-5);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+            background-color: var(--color-primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            padding: var(--space-4) var(--space-6);
+            font-size: 1.125rem;
+            font-weight: 600;
+            font-family: var(--font-body);
+            cursor: pointer;
+            min-width: 48px;
+            min-height: 48px;
+            transition: transform 0.1s ease, background-color 0.2s ease;
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+        }
+
+        .btn:active {
+            transform: scale(0.96);
+        }
+
+        .btn:focus-visible {
+            outline: 3px solid var(--color-accent);
+            outline-offset: 2px;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--color-primary-dark);
+            border: 2px solid var(--color-primary);
+            box-shadow: none;
+        }
+
+        .btn-icon {
+            width: 48px;
+            height: 48px;
+            padding: 0;
+            border-radius: 50%;
+            background-color: var(--color-surface);
+            color: var(--color-text);
+            border: 1px solid rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* HUD */
+        #hud {
+            position: absolute;
+            top: env(safe-area-inset-top, 16px);
+            left: 0;
+            width: 100%;
+            padding: var(--space-4);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .hud-item {
+            background: rgba(255, 255, 255, 0.9);
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            pointer-events: auto;
+        }
+
+        /* Fact Card */
+        #fact-card {
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+            max-width: 90vw;
+            width: 400px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            text-align: left;
+            border-top: 4px solid var(--color-accent);
+        }
+
+        #fact-card h3 {
+            color: var(--color-primary-dark);
+            margin-bottom: var(--space-3);
+            font-size: 1.25rem;
+        }
+
+        #fact-card p {
+            text-align: left;
+            margin-bottom: var(--space-4);
+            color: var(--color-text);
+            line-height: 1.6;
+        }
+
+        /* Orientation Warning */
+        #orientation-warning {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--color-bg);
+            z-index: 10000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: var(--space-5);
+        }
+
+        @media (orientation: landscape) and (max-height: 500px) {
+            #orientation-warning {
+                display: flex;
+            }
+        }
+
+        .rotate-icon {
+            width: 64px;
+            height: 64px;
+            margin-bottom: var(--space-4);
+            animation: rotate-hint 2s infinite ease-in-out;
+        }
+
+        @keyframes rotate-hint {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(90deg); }
+        }
+
+        /* Accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Utility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="orientation-warning">
+        <svg class="rotate-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+        </svg>
+        <h2>Putar Perangkat Anda</h2>
+        <p>Permainan ini dirancang optimal dalam mode potret untuk pengalaman perjalanan vertikal yang lebih baik.</p>
+    </div>
+
+    <div id="game-container">
+        <canvas id="gameCanvas" aria-label="Area permainan Petualangan Tetes"></canvas>
+
+        <div id="hud" class="hidden" aria-live="polite">
+            <div class="hud-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                <span id="score-display">0</span>
+            </div>
+            <div class="hud-item">
+                <span id="level-display">Troposfer</span>
+            </div>
+            <button id="pause-btn" class="btn btn-icon" aria-label="Jeda permainan">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            </button>
+        </div>
+
+        <!-- Main Menu -->
+        <div id="menu-overlay" class="overlay">
+            <h1>Petualangan Tetes</h1>
+            <p>Jelajahi siklus hidrologi dan lapisan atmosfer. Kumpulkan energi matahari, hindari polusi, dan pelajari fakta ilmiah di setiap ketinggian.</p>
+            <button id="start-btn" class="btn">Mulai Petualangan</button>
+            <button id="settings-btn" class="btn btn-secondary" style="margin-top: 12px;">Pengaturan</button>
+        </div>
+
+        <!-- Pause Menu -->
+        <div id="pause-overlay" class="overlay hidden">
+            <h2>Permainan Dijeda</h2>
+            <button id="resume-btn" class="btn">Lanjutkan</button>
+            <button id="restart-btn" class="btn btn-secondary" style="margin-top: 12px;">Mulai Ulang</button>
+            <button id="menu-return-btn" class="btn btn-secondary" style="margin-top: 12px;">Ke Menu Utama</button>
+        </div>
+
+        <!-- Fact Screen -->
+        <div id="fact-overlay" class="overlay hidden">
+            <div id="fact-card">
+                <h3 id="fact-title">Lapisan Atmosfer</h3>
+                <p id="fact-desc">Deskripsi fakta ilmiah akan muncul di sini.</p>
+                <button id="fact-continue-btn" class="btn" style="width: 100%;">Lanjutkan Perjalanan</button>
+            </div>
+        </div>
+
+        <!-- Game Over / Win -->
+        <div id="end-overlay" class="overlay hidden">
+            <h2 id="end-title">Siklus Selesai!</h2>
+            <p id="end-desc">Kamu telah menyelesaikan perjalanan siklus hidrologi dengan sukses.</p>
+            <p style="font-size: 1.5rem; font-weight: 700; color: var(--color-primary-dark); margin-bottom: 24px;">Skor Akhir: <span id="final-score">0</span></p>
+            <button id="play-again-btn" class="btn">Main Lagi</button>
+            <button id="end-menu-btn" class="btn btn-secondary" style="margin-top: 12px;">Ke Menu Utama</button>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * PETUALANGAN TETES: GAME ENGINE
+         * [SPAWN VALIDATION] Player spawn di (x, y) = tengah bawah canvas. Verified: area awal selalu aman (laut).
+         */
+
+        // --- KONFIGURASI & STATE ---
+        const CONFIG = {
+            playerSpeed: 300, // px per detik
+            fallSpeed: 150,
+            spawnRate: 1.5, // detik
+            maxDPR: 2,
+            levels: [
+                {
+                    name: "Troposfer",
+                    subtitle: "Evaporasi",
+                    targetScore: 10,
+                    bgTop: "#87CEEB",
+                    bgBottom: "#E0F6FF",
+                    fact: {
+                        title: "Troposfer (0-12 km)",
+                        desc: "Lapisan terbawah atmosfer tempat semua cuaca terjadi. Suhu turun rata-rata 0,6°C setiap kenaikan 100 meter. Di sini, air laut menguap menjadi uap air karena panas matahari."
+                    }
+                },
+                {
+                    name: "Stratosfer",
+                    subtitle: "Kondensasi",
+                    targetScore: 20,
+                    bgTop: "#4A90E2",
+                    bgBottom: "#87CEEB",
+                    fact: {
+                        title: "Stratosfer (12-50 km)",
+                        desc: "Lapisan yang mengandung lapisan ozon yang menyerap radiasi UV. Uap air dari troposfer mendingin dan mengalami kondensasi, membentuk awan kumulonimbus yang padat."
+                    }
+                },
+                {
+                    name: "Mesosfer & Kembali",
+                    subtitle: "Presipitasi",
+                    targetScore: 30,
+                    bgTop: "#2C3E50",
+                    bgBottom: "#4A90E2",
+                    fact: {
+                        title: "Presipitasi & Siklus Berulang",
+                        desc: "Di mesosfer (50-80 km), suhu sangat dingin. Awan yang jenuh melepaskan air dalam bentuk hujan, salju, atau hujan es, kembali ke permukaan tanah untuk memulai siklus baru."
+                    }
+                }
+            ]
+        };
+
+        const STATE = {
+            screen: 'menu', // menu, playing, paused, fact, gameover
+            levelIndex: 0,
+            score: 0,
+            lastTime: 0,
+            spawnTimer: 0,
+            isMuted: false,
+            isOnboardingSeen: false,
+            player: { x: 0, y: 0, radius: 20, targetX: 0 },
+            entities: [], // { x, y, type, speed, radius }
+            particles: [],
+            canvas: { width: 0, height: 0, dpr: 1 },
+            wakeLock: null,
+            audioCtx: null
+        };
+
+        // --- DOM ELEMENTS ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d', { alpha: false });
+        const ui = {
+            menu: document.getElementById('menu-overlay'),
+            pause: document.getElementById('pause-overlay'),
+            fact: document.getElementById('fact-overlay'),
+            end: document.getElementById('end-overlay'),
+            hud: document.getElementById('hud'),
+            score: document.getElementById('score-display'),
+            level: document.getElementById('level-display'),
+            factTitle: document.getElementById('fact-title'),
+            factDesc: document.getElementById('fact-desc'),
+            endTitle: document.getElementById('end-title'),
+            endDesc: document.getElementById('end-desc'),
+            finalScore: document.getElementById('final-score')
+        };
+
+        // --- AUDIO SYSTEM (Web Audio API) ---
+        function initAudio() {
+            if (!STATE.audioCtx) {
+                try {
+                    STATE.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.warn('Web Audio API tidak didukung');
+                }
+            }
+            if (STATE.audioCtx && STATE.audioCtx.state === 'suspended') {
+                STATE.audioCtx.resume();
+            }
+        }
+
+        function playSound(type) {
+            if (STATE.isMuted || !STATE.audioCtx) return;
+            try {
+                const osc = STATE.audioCtx.createOscillator();
+                const gain = STATE.audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(STATE.audioCtx.destination);
+
+                const now = STATE.audioCtx.currentTime;
+                if (type === 'collect') {
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.exponentialRampToValueAtTime(1046.5, now + 0.1);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                } else if (type === 'hit') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.exponentialRampToValueAtTime(50, now + 0.2);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                    osc.start(now);
+                    osc.stop(now + 0.2);
+                } else if (type === 'levelup') {
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.setValueAtTime(554, now + 0.1);
+                    osc.frequency.setValueAtTime(659, now + 0.2);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                }
+            } catch (e) {
+                // Fallback diam jika audio gagal
+            }
+        }
+
+        // --- STORAGE ---
+        function saveState() {
+            try {
+                const data = {
+                    isMuted: STATE.isMuted,
+                    isOnboardingSeen: STATE.isOnboardingSeen,
+                    highScore: localStorage.getItem('tetes_highscore') || 0
+                };
+                localStorage.setItem('tetes_game_v1', JSON.stringify(data));
+            } catch (e) {
+                // Quota exceeded atau private mode
+            }
+        }
+
+        function loadState() {
+            try {
+                const data = JSON.parse(localStorage.getItem('tetes_game_v1'));
+                if (data) {
+                    STATE.isMuted = data.isMuted || false;
+                    STATE.isOnboardingSeen = data.isOnboardingSeen || false;
+                }
+            } catch (e) {
+                // Data korup, reset ke default
+                localStorage.removeItem('tetes_game_v1');
+            }
+        }
+
+        // --- RESIZE & DPR HANDLING (Android Safe) ---
+        let resizeTimeout;
+        function handleResize() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                const dpr = Math.min(window.devicePixelRatio || 1, CONFIG.maxDPR);
+                STATE.canvas.dpr = dpr;
+                STATE.canvas.width = window.innerWidth;
+                STATE.canvas.height = window.innerHeight;
+                
+                canvas.width = STATE.canvas.width * dpr;
+                canvas.height = STATE.canvas.height * dpr;
+                
+                ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset sebelum scale
+                ctx.scale(dpr, dpr);
+                
+                // Reposition player if out of bounds
+                if (STATE.player.x > STATE.canvas.width) {
+                    STATE.player.x = STATE.canvas.width / 2;
+                    STATE.player.targetX = STATE.player.x;
+                }
+                STATE.player.y = STATE.canvas.height - 100;
+            }, 150); // Debounce 150ms untuk Android address bar hide/show
+        }
+
+        window.addEventListener('resize', handleResize);
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', handleResize);
+        }
+
+        // --- INPUT HANDLING ---
+        let pointerId = null;
+
+        function handlePointerDown(e) {
+            if (STATE.screen !== 'playing') return;
+            e.preventDefault();
+            pointerId = e.pointerId;
+            canvas.setPointerCapture(pointerId);
+            updatePlayerTarget(e.clientX);
+        }
+
+        function handlePointerMove(e) {
+            if (STATE.screen !== 'playing' || e.pointerId !== pointerId) return;
+            e.preventDefault();
+            updatePlayerTarget(e.clientX);
+        }
+
+        function handlePointerUp(e) {
+            if (e.pointerId === pointerId) {
+                pointerId = null;
+                canvas.releasePointerCapture(e.pointerId);
+            }
+        }
+
+        function updatePlayerTarget(x) {
+            STATE.player.targetX = Math.max(STATE.player.radius, Math.min(STATE.canvas.width - STATE.player.radius, x));
+        }
+
+        canvas.addEventListener('pointerdown', handlePointerDown);
+        canvas.addEventListener('pointermove', handlePointerMove);
+        canvas.addEventListener('pointerup', handlePointerUp);
+        canvas.addEventListener('pointercancel', handlePointerUp);
+        canvas.addEventListener('contextmenu', e => e.preventDefault());
+        canvas.addEventListener('dragstart', e => e.preventDefault());
+
+        // Keyboard shortcuts
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
+                if (STATE.screen === 'playing') pauseGame();
+                else if (STATE.screen === 'paused') resumeGame();
+            }
+            if (e.key === 'm' || e.key === 'M') toggleMute();
+            if (e.key === 'r' || e.key === 'R') {
+                if (STATE.screen === 'playing' || STATE.screen === 'paused') resetGame();
+            }
+            if (e.key === 'ArrowLeft') {
+                if (STATE.screen === 'playing') updatePlayerTarget(STATE.player.x - 40);
+            }
+            if (e.key === 'ArrowRight') {
+                if (STATE.screen === 'playing') updatePlayerTarget(STATE.player.x + 40);
+            }
+        });
+
+        // --- GAME LOGIC ---
+        function initGame() {
+            STATE.levelIndex = 0;
+            STATE.score = 0;
+            STATE.entities = [];
+            STATE.particles = [];
+            STATE.player.x = STATE.canvas.width / 2;
+            STATE.player.targetX = STATE.player.x;
+            STATE.player.y = STATE.canvas.height - 100;
+            STATE.spawnTimer = 0;
+            updateHUD();
+        }
+
+        function spawnEntity() {
+            const level = CONFIG.levels[STATE.levelIndex];
+            const type = Math.random() > 0.3 ? 'sun' : 'pollution';
+            const radius = type === 'sun' ? 15 : 20;
+            const x = Math.random() * (STATE.canvas.width - radius * 2) + radius;
+            
+            STATE.entities.push({
+                x,
+                y: -50,
+                type,
+                speed: type === 'sun' ? 100 + Math.random() * 50 : 150 + Math.random() * 100,
+                radius,
+                wobble: Math.random() * Math.PI * 2
+            });
+        }
+
+        function createParticles(x, y, color, count = 5) {
+            for (let i = 0; i < count; i++) {
+                STATE.particles.push({
+                    x, y,
+                    vx: (Math.random() - 0.5) * 200,
+                    vy: (Math.random() - 0.5) * 200,
+                    life: 1.0,
+                    color
+                });
+            }
+        }
+
+        function checkCollisions(dt) {
+            const p = STATE.player;
+            for (let i = STATE.entities.length - 1; i >= 0; i--) {
+                const e = STATE.entities[i];
+                const dx = p.x - e.x;
+                const dy = p.y - e.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < p.radius + e.radius) {
+                    if (e.type === 'sun') {
+                        STATE.score++;
+                        playSound('collect');
+                        createParticles(e.x, e.y, '#FFD700', 8);
+                        updateHUD();
+                        checkLevelProgress();
+                    } else {
+                        playSound('hit');
+                        createParticles(e.x, e.y, '#555', 5);
+                        // Hukuman ringan: kurangi skor minimal 0
+                        STATE.score = Math.max(0, STATE.score - 1);
+                        updateHUD();
+                    }
+                    STATE.entities.splice(i, 1);
+                } else if (e.y > STATE.canvas.height + 50) {
+                    STATE.entities.splice(i, 1);
+                }
+            }
+        }
+
+        function checkLevelProgress() {
+            const level = CONFIG.levels[STATE.levelIndex];
+            if (STATE.score >= level.targetScore) {
+                if (STATE.levelIndex < CONFIG.levels.length - 1) {
+                    showFactScreen();
+                } else {
+                    endGame(true);
+                }
+            }
+        }
+
+        function showFactScreen() {
+            STATE.screen = 'fact';
+            playSound('levelup');
+            const level = CONFIG.levels[STATE.levelIndex];
+            ui.factTitle.textContent = level.fact.title;
+            ui.factDesc.textContent = level.fact.desc;
+            ui.fact.classList.remove('hidden');
+            ui.hud.classList.add('hidden');
+            saveState();
+        }
+
+        function nextLevel() {
+            STATE.levelIndex++;
+            STATE.entities = []; // Clear entities for clean transition
+            STATE.screen = 'playing';
+            ui.fact.classList.add('hidden');
+            ui.hud.classList.remove('hidden');
+            updateHUD();
+        }
+
+        function updateHUD() {
+            ui.score.textContent = STATE.score;
+            ui.level.textContent = CONFIG.levels[STATE.levelIndex].name;
+        }
+
+        function pauseGame() {
+            if (STATE.screen !== 'playing') return;
+            STATE.screen = 'paused';
+            ui.pause.classList.remove('hidden');
+            ui.hud.classList.add('hidden');
+            releaseWakeLock();
+        }
+
+        function resumeGame() {
+            if (STATE.screen !== 'paused') return;
+            STATE.screen = 'playing';
+            STATE.lastTime = performance.now(); // Reset delta time agar tidak melompat
+            ui.pause.classList.add('hidden');
+            ui.hud.classList.remove('hidden');
+            requestWakeLock();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function resetGame() {
+            initGame();
+            STATE.screen = 'playing';
+            ui.pause.classList.add('hidden');
+            ui.end.classList.add('hidden');
+            ui.hud.classList.remove('hidden');
+            STATE.lastTime = performance.now();
+            requestWakeLock();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function endGame(win) {
+            STATE.screen = 'gameover';
+            ui.end.classList.remove('hidden');
+            ui.hud.classList.add('hidden');
+            ui.endTitle.textContent = win ? "Siklus Selesai!" : "Permainan Berakhir";
+            ui.endDesc.textContent = win ? "Kamu telah menyelesaikan perjalanan siklus hidrologi dengan sukses." : "Coba lagi untuk menyelesaikan siklus air!";
+            ui.finalScore.textContent = STATE.score;
+            
+            try {
+                const currentHigh = parseInt(localStorage.getItem('tetes_highscore') || '0');
+                if (STATE.score > currentHigh) {
+                    localStorage.setItem('tetes_highscore', STATE.score.toString());
+                }
+            } catch(e) {}
+            
+            releaseWakeLock();
+        }
+
+        function toggleMute() {
+            STATE.isMuted = !STATE.isMuted;
+            saveState();
+            // Visual feedback could be added here
+        }
+
+        // --- WAKE LOCK & VISIBILITY ---
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    STATE.wakeLock = await navigator.wakeLock.request('screen');
+                }
+            } catch (e) {
+                // Gagal atau tidak didukung, lanjutkan saja
+            }
+        }
+
+        function releaseWakeLock() {
+            if (STATE.wakeLock) {
+                STATE.wakeLock.release();
+                STATE.wakeLock = null;
+            }
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && STATE.screen === 'playing') {
+                pauseGame();
+            } else if (!document.hidden && STATE.screen === 'paused') {
+                // Opsional: auto-resume atau biarkan user klik resume
+            }
+        });
+
+        window.addEventListener('blur', () => {
+            if (STATE.screen === 'playing') pauseGame();
+        });
+
+        // Android Back Button Handling
+        history.pushState(null, null, location.href);
+        window.addEventListener('popstate', function (event) {
+            if (STATE.screen === 'playing') {
+                pauseGame();
+                history.pushState(null, null, location.href);
+            } else if (STATE.screen === 'paused') {
+                resumeGame();
+            } else {
+                history.pushState(null, null, location.href);
+            }
+        });
+
+        // --- RENDER & LOOP ---
+        function update(dt) {
+            if (STATE.screen !== 'playing') return;
+
+            // Spawn
+            STATE.spawnTimer += dt;
+            if (STATE.spawnTimer > CONFIG.spawnRate) {
+                spawnEntity();
+                STATE.spawnTimer = 0;
+            }
+
+            // Player movement (smooth lerp)
+            const dx = STATE.player.targetX - STATE.player.x;
+            STATE.player.x += dx * 10 * dt;
+
+            // Entities
+            for (let e of STATE.entities) {
+                e.y += e.speed * dt;
+                e.wobble += dt * 2;
+                if (e.type === 'pollution') {
+                    e.x += Math.sin(e.wobble) * 30 * dt;
+                }
+            }
+
+            // Particles
+            for (let i = STATE.particles.length - 1; i >= 0; i--) {
+                const p = STATE.particles[i];
+                p.x += p.vx * dt;
+                p.y += p.vy * dt;
+                p.life -= dt * 2;
+                if (p.life <= 0) STATE.particles.splice(i, 1);
+            }
+
+            checkCollisions(dt);
+        }
+
+        function draw() {
+            const w = STATE.canvas.width;
+            const h = STATE.canvas.height;
+            const level = CONFIG.levels[STATE.levelIndex];
+
+            // Background Gradient
+            const grad = ctx.createLinearGradient(0, 0, 0, h);
+            grad.addColorStop(0, level.bgTop);
+            grad.addColorStop(1, level.bgBottom);
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, w, h);
+
+            // Draw Entities
+            for (let e of STATE.entities) {
+                ctx.beginPath();
+                if (e.type === 'sun') {
+                    ctx.fillStyle = '#FFD700';
+                    ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Glow
+                    ctx.shadowColor = '#FFD700';
+                    ctx.shadowBlur = 10;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                } else {
+                    ctx.fillStyle = '#555';
+                    // Cloud/pollution shape
+                    ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // Draw Player (Droplet)
+            const p = STATE.player;
+            ctx.beginPath();
+            ctx.fillStyle = '#4A90E2';
+            // Tetes air shape
+            ctx.moveTo(p.x, p.y - p.radius);
+            ctx.bezierCurveTo(p.x + p.radius, p.y + p.radius/2, p.x + p.radius, p.y + p.radius, p.x, p.y + p.radius);
+            ctx.bezierCurveTo(p.x - p.radius, p.y + p.radius, p.x - p.radius, p.y + p.radius/2, p.x, p.y - p.radius);
+            ctx.fill();
+            
+            // Highlight
+            ctx.beginPath();
+            ctx.fillStyle = 'rgba(255,255,255,0.6)';
+            ctx.arc(p.x - p.radius/3, p.y - p.radius/3, p.radius/4, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw Particles
+            for (let part of STATE.particles) {
+                ctx.globalAlpha = part.life;
+                ctx.fillStyle = part.color;
+                ctx.beginPath();
+                ctx.arc(part.x, part.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1.0;
+
+            // Level Progress Bar (Subtle)
+            const progress = Math.min(1, STATE.score / level.targetScore);
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            ctx.fillRect(w/2 - 50, 20, 100, 6);
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(w/2 - 50, 20, 100 * progress, 6);
+        }
+
+        function gameLoop(timestamp) {
+            if (STATE.screen !== 'playing') return;
+
+            const dt = Math.min((timestamp - STATE.lastTime) / 1000, 0.05); // Cap dt 0.05s
+            STATE.lastTime = timestamp;
+
+            update(dt);
+            draw();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // --- INITIALIZATION ---
+        function startGame() {
+            initAudio();
+            STATE.isOnboardingSeen = true;
+            saveState();
+            ui.menu.classList.add('hidden');
+            ui.hud.classList.remove('hidden');
+            STATE.screen = 'playing';
+            initGame();
+            STATE.lastTime = performance.now();
+            requestWakeLock();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Event Listeners UI
+        document.getElementById('start-btn').addEventListener('click', startGame);
+        document.getElementById('pause-btn').addEventListener('click', pauseGame);
+        document.getElementById('resume-btn').addEventListener('click', resumeGame);
+        document.getElementById('restart-btn').addEventListener('click', resetGame);
+        document.getElementById('menu-return-btn').addEventListener('click', () => {
+            STATE.screen = 'menu';
+            ui.pause.classList.add('hidden');
+            ui.menu.classList.remove('hidden');
+            releaseWakeLock();
+        });
+        document.getElementById('fact-continue-btn').addEventListener('click', nextLevel);
+        document.getElementById('play-again-btn').addEventListener('click', resetGame);
+        document.getElementById('end-menu-btn').addEventListener('click', () => {
+            STATE.screen = 'menu';
+            ui.end.classList.add('hidden');
+            ui.menu.classList.remove('hidden');
+        });
+        document.getElementById('settings-btn').addEventListener('click', toggleMute);
+
+        // Prevent default touch behaviors
+        document.addEventListener('touchmove', function(e) {
+            if (STATE.screen === 'playing') e.preventDefault();
+        }, { passive: false });
+
+        // Boot
+        loadState();
+        handleResize();
+        
+        // [TRACE-THROUGH VERIFICATION]
+        // 1. Spawn: Player di tengah bawah, verified aman.
+        // 2. Input: Pointer events menangani touch/mouse, update target X.
+        // 3. Loop: requestAnimationFrame dengan delta time capped 0.05.
+        // 4. State: Pause menghentikan loop, resume mereset lastTime.
+        // 5. Android: Resize debounce, 100dvh, popstate handler aktif.
+    </script>
+</body>
+</html>
